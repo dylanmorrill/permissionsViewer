@@ -1,0 +1,12 @@
+<template>
+  <template if:true={bool}>
+     <svg class="slds-icon slds-icon_x-small slds-icon-text-success" aria-hidden="true">
+        <use xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg#check"></use>
+     </svg>
+  </template>
+  <template if:false={bool}>
+     <svg class="slds-icon slds-icon_x-small slds-icon-text-warning" aria-hidden="true">
+        <use xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg#steps"></use>
+     </svg>
+  </template>
+</template>

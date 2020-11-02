@@ -1,3 +1,191 @@
 <template>
-    
+   <lightning-input
+      type="search"
+      onchange={handleKeyChange}
+      class="slds-m-bottom_small"
+      value={searchKey}>
+   </lightning-input>
+   <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+      <thead>
+         <tr class="slds-line-height_reset">
+            <th class="" scope="col">
+               <div class="slds-truncate" title="Name">Name</div>
+            </th>
+            <th class="" scope="col">
+               <div class="slds-truncate" title="Email">Email</div>
+            </th>
+            <th class="" scope="col">
+               <div class="slds-truncate" title="Created Date">Created Date</div>
+            </th>
+            <th class="" scope="col">
+               <div class="slds-truncate" title="Profile">Profile</div>
+            </th>
+         </tr>
+      </thead>
+      <tbody>
+         <template for:each={users.data} for:item="user">
+            <tr key={user.Id} class="slds-hint-parent">
+               <th data-label="Name" scope="row">
+                  <div class="slds-truncate" title={user.Name}>
+                     <lightning-button value={user.Id} label={user.Name} title="user" onclick={handleUserSelected}  class="slds-m-left_x-small"></lightning-button>
+                  </div>
+               </th>
+               <td data-label="Email">
+                  <div class="slds-truncate" title={user.Email}>{user.Email}</div>
+               </td>
+               <td data-label="Created Date">
+                  <div class="slds-truncate" title={user.CreatedDate}>
+                     <lightning-formatted-date-time 
+                        value={user.CreatedDate}
+                        year="numeric"
+                        day="2-digit"
+                        month="long"
+                        time-zone="UTC">
+                     </lightning-formatted-date-time>
+                  </div>
+               </td>
+               <td data-label="Profile">
+                  <div class="slds-truncate" title={user.Profile.Name}>{user.Profile.Name}</div>
+               </td>
+            </tr>
+         </template>
+      </tbody>
+   </table>
+   <template if:true={userSelected}>
+      <div class="slds-grid slds-wrap">
+         <div class="slds-size_1-of-3">
+            <div class="slds-box slds-box_x-small">
+               <lightning-card  title="Object Permissions">
+                  <template if:false={objectPerms.data}>
+                     <div class="slds-align_absolute-center" style="height:5rem">
+                        <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+                     </div>
+                  </template>
+                  <template if:true={objectPerms.data}>
+                     <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped">
+                        <thead>
+                           <tr class="slds-line-height_reset">
+                              <th class="" scope="col">
+                                 <div class="slds-truncate" title="Object">Object</div>
+                              </th>
+                              <th class="" scope="col">
+                                 <div class="slds-truncate" title="Create">Create</div>
+                              </th>
+                              <th class="" scope="col">
+                                 <div class="slds-truncate" title="Read">Read</div>
+                              </th>
+                              <th class="" scope="col">
+                                 <div class="slds-truncate" title="Edit">Edit</div>
+                              </th>
+                              <th class="" scope="col">
+                                 <div class="slds-truncate" title="Delete">Delete</div>
+                              </th>
+                              <th class="" scope="col">
+                                 <div class="slds-truncate" title="View All">View All</div>
+                              </th>
+                              <th class="" scope="col">
+                                 <div class="slds-truncate" title="Modiy All">Modify All</div>
+                              </th>
+                           </tr>
+                        </thead>
+                        <tbody>
+                           <template for:each={objectPerms.data} for:item="objectPerm">
+                              <tr key={objectPerm.SobjectType} class="slds-hint-parent">
+                                 <td data-label="Object">
+                                    <div class="slds-truncate" title={objectPerm.SobjectType}>
+                                       {objectPerm.SobjectType}
+                                    </div>
+                                 </td>
+                                 <td data-label="Create">
+                                    <div class="slds-truncate" title={objectPerm.PermissionsCreate}>
+                                       <c-object-perm-checkbox bool={objectPerm.PermissionsCreate}>
+                                       </c-object-perm-checkbox>
+                                    </div>
+                                 </td>
+                                 <td data-label="Read">
+                                    <div class="slds-truncate" title={objectPerm.PermissionsRead}>
+                                       <c-object-perm-checkbox bool={objectPerm.PermissionsRead}>
+                                       </c-object-perm-checkbox>
+                                    </div>
+                                 </td>
+                                 <td data-label="Edit">
+                                    <div class="slds-truncate" title={objectPerm.PermissionsEdit>
+                                       <c-object-perm-checkbox bool={objectPerm.PermissionsEdit}>
+                                       </c-object-perm-checkbox>
+                                    </div>
+                                 </td>
+                                 <td data-label="Delete">
+                                    <div class="slds-truncate" title={objectPerm.PermissionsDelete}>
+                                       <c-object-perm-checkbox bool={objectPerm.PermissionsDelete}>
+                                       </c-object-perm-checkbox>
+                                    </div>
+                                 </td>
+                                 <td data-label="View All">
+                                    <div class="slds-truncate" title={objectPerm.PermissionsViewAllRecords}>
+                                       <c-object-perm-checkbox bool={objectPerm.PermissionsViewAllRecords}>
+                                       </c-object-perm-checkbox>
+                                    </div>
+                                 </td>
+                                 <td data-label="Modify All">
+                                    <div class="slds-truncate" title={objectPerm.PermissionsModifyAllRecords}>
+                                       <c-object-perm-checkbox bool={objectPerm.PermissionsModifyAllRecords}>
+                                       </c-object-perm-checkbox>
+                                    </div>
+                                 </td>
+                              </tr>
+                           </template>
+                        </tbody>
+                     </table>
+                  </template>
+               </lightning-card>
+            </div>
+         </div>
+         <div class="slds-size_1-of-3">
+            <div class="slds-box slds-box_x-small">
+               <lightning-card  title="System Permissions">
+                  <template if:false={systemPerms.data}>
+                     <div class="slds-align_absolute-center" style="height:5rem">
+                        <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+                     </div>
+                  </template>
+                  <template if:true={systemPerms.data}>
+                     <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped">
+                        <thead>
+                           <tr class="slds-line-height_reset">
+                              <th class="" scope="col">
+                                 <div class="slds-truncate" title="Permission Name">Permission Name</div>
+                              </th>
+                              <th class="" scope="col">
+                                 <div class="slds-truncate" title="Has Permission">Has Permission</div>
+                              </th>
+                           </tr>
+                        </thead>
+                        <tbody>
+                           <template for:each={systemPerms.data} for:item="systemPerm">
+                              <tr key={systemPerm.permission} class="slds-hint-parent">
+                                 <td data-label="Object">
+                                    <div class="slds-truncate" title={systemPerm.permission}>
+                                       {systemPerm.permission}
+                                    </div>
+                                 </td>
+                                 <td data-label="Create">
+                                    <div class="slds-truncate" title={systemPerm.hasPermission}>
+                                       <c-object-perm-checkbox bool={systemPerm.hasPermission}>
+                                       </c-object-perm-checkbox>
+                                    </div>
+                                 </td>
+                              </tr>
+                           </template>
+                        </tbody>
+                     </table>
+                  </template>
+               </lightning-card>
+            </div>
+         </div>
+         <div class="slds-size_1-of-3">
+            <div class="slds-box slds-box_x-small">
+            </div>
+         </div>
+      </div>
+   </template>
 </template>
