@@ -1,11 +1,17 @@
 public class permSetSingle implements Comparable{
     @AuraEnabled
     public String permission;
+    
     @AuraEnabled
     public Boolean hasPermission;
-    public permSetSingle(String permission, Boolean hasPermission){
+    
+    @AuraEnabled
+    public List<String> permissionSetLabels;
+        
+    public permSetSingle(String permission, Boolean hasPermission, List<String> permissionSetLabels){
         this.permission = permission;
         this.hasPermission = hasPermission;
+        this.permissionSetLabels = permissionSetLabels;
     }
     
     public Integer compareTo(Object compareTo){
