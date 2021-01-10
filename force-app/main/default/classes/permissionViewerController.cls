@@ -8,23 +8,23 @@ public with sharing class permissionViewerController{
             'description',
             'namespaceprefix',
             'isownedbyprofile',
-'iscustom'
-     };
+            'iscustom'
+            };
                 
-    @AuraEnabled(cacheable=true)
-    public static List<User> getUsers(String searchKey) {
-        String key = '%' + searchKey + '%';
-        
-        List<User> allActiveUsers = [SELECT Id, Name, Email, FORMAT(CreatedDate), Profile.Name, 
-                                     userRole.Name, Manager.Name
-                                     FROM User
-                                     WHERE isActive = true
-                                     AND Name LIKE :key
-                                     AND UserType = 'Standard'
-                                     ORDER BY lastName ASC];
-        
-        return allActiveUsers;
-    }
+                @AuraEnabled(cacheable=true)
+                public static List<User> getUsers(String searchKey) {
+                    String key = '%' + searchKey + '%';
+                    
+                    List<User> allActiveUsers = [SELECT Id, Name, Email, FORMAT(CreatedDate), Profile.Name, 
+                                                 userRole.Name, Manager.Name
+                                                 FROM User
+                                                 WHERE isActive = true
+                                                 AND Name LIKE :key
+                                                 AND UserType = 'Standard'
+                                                 ORDER BY lastName ASC];
+                    
+                    return allActiveUsers;
+                }
     
     @AuraEnabled(cacheable=true)
     public static List<permSetSingle> getSystemPerms(Id userId){
@@ -32,7 +32,7 @@ public with sharing class permissionViewerController{
         Map<String,permSetSingle> permToPermSetSingle = new Map<String,permSetSingle>();
         Map<String, Schema.SObjectField> allSystemPerms = Schema.SObjectType.permissionSet.fields.getMap();
         List<String> allSystemPermsSet = new List<String>(allSystemPerms.keySet());
-
+        
         String systemPermQuery = 'SELECT profile.Name';
         
         for (String perm : allSystemPermsSet){  
@@ -40,10 +40,10 @@ public with sharing class permissionViewerController{
         }
         
         systemPermQuery += ' FROM PermissionSet WHERE Id in (SELECT PermissionSetId' +
-                                                                ' FROM PermissionSetAssignment' + 
-                                                                ' WHERE AssigneeId = :userId)' +
-            				' ORDER BY isOwnedByProfile DESC';
-
+            ' FROM PermissionSetAssignment' + 
+            ' WHERE AssigneeId = :userId)' +
+            ' ORDER BY isOwnedByProfile DESC';
+        
         for (PermissionSet permSet : database.query(systemPermQuery)){
             String label;
             
@@ -52,7 +52,7 @@ public with sharing class permissionViewerController{
             }else{
                 label = permSet.label;
             }
-
+            
             for (String perm : allSystemPermsSet){
                 
                 if (sillyPerms.contains(perm)){
@@ -71,9 +71,9 @@ public with sharing class permissionViewerController{
                 }
                 
                 String permLabel = allSystemPerms.get(perm).getDescribe().getLabel();
-
+                
                 if (!permToPermSetSingle.containsKey(permLabel)){
-   
+                    
                     permSetSingle ps = new PermSetSingle(permLabel, hasPermission, new List<String>());
                     if (hasPermission){
                         ps.permissionSetLabels.add(label);
@@ -81,7 +81,7 @@ public with sharing class permissionViewerController{
                     permToPermSetSingle.put(permLabel, ps);                
                     continue;
                 }
-
+                
                 permSetSingle permissionCurrentValue = permToPermSetSingle.get(permLabel);
                 
                 if (hasPermission){
@@ -92,7 +92,7 @@ public with sharing class permissionViewerController{
                 }
             }
         }
-
+        
         
         List<permSetSingle> returnList = permToPermSetSingle.values();
         returnList.sort();
@@ -122,17 +122,25 @@ public with sharing class permissionViewerController{
         
         Map<String,objectPermWrapper> objectNameToUltPermissionMap = new Map<String,objectPermWrapper>();
         
+        Set<ID> permSetIds = new Set<ID>();
+        
+        for (PermissionSetAssignment pm : [SELECT PermissionSetId
+                                                   FROM PermissionSetAssignment
+                                                   WHERE AssigneeId = :userId])
+        {
+            permSetIds.add(pm.PermissionSetId);
+        }
+        
         
         for (PermissionSet permSet : [SELECT label, profile.Name, isOwnedByProfile,
                                       (SELECT PermissionsCreate, PermissionsRead, PermissionsEdit,
                                        PermissionsDelete, PermissionsModifyAllRecords, PermissionsViewAllRecords,
                                        SobjectType
                                        FROM ObjectPerms
-                                      ORDER BY SobjectType)
+                                       ORDER BY SobjectType)
                                       FROM PermissionSet
-                                      WHERE Id in (SELECT PermissionSetId
-                                                   FROM PermissionSetAssignment
-                                                   WHERE AssigneeId = :userId)
+                                      WHERE Id in :permSetIds
+                                      
                                       ORDER BY isOwnedByProfile DESC])
         {
             String label;
@@ -153,7 +161,6 @@ public with sharing class permissionViewerController{
                 Boolean currentDeletePerm = objectPerm.PermissionsDelete;
                 Boolean currentViewAllPerm = objectPerm.PermissionsViewAllRecords;
                 Boolean currentModAllPerm = objectPerm.PermissionsModifyAllRecords;
-
                 
                 if (!objectNameToUltPermissionMap.containsKey(currentSobjectType)){
                     
@@ -189,56 +196,87 @@ public with sharing class permissionViewerController{
                     if (currentModAllPerm){
                         objPermWrap.modAllPerm.permissionSetLabels.add(label);
                     }
-                    objectNameToUltPermissionMap.put(currentSobjectType, objPermWrap); 
-                    continue;
+                    objectNameToUltPermissionMap.put(currentSobjectType, objPermWrap);
+               
+
+                    
                 }
                 
-                objectPermWrapper currentObjPermWrapper = objectNameToUltPermissionMap.get(currentSobjectType);
                 
-                if (currentCreatePerm){
-                    currentObjPermWrapper.createPerm.permissionSetLabels.add(label);
-                    if(!currentObjPermWrapper.createPerm.hasPermission){
-                        currentObjPermWrapper.createPerm.hasPermission = currentCreatePerm;
+                
+                
+                else{
+                    
+                    objectPermWrapper currentObjPermWrapper = objectNameToUltPermissionMap.get(currentSobjectType);
+
+                    
+                    if (currentCreatePerm){
+                        
+                        if (!currentObjPermWrapper.createPerm.permissionSetLabels.contains(label)){
+                            currentObjPermWrapper.createPerm.permissionSetLabels.add(label);
+                        }
+                        
+                        if(!currentObjPermWrapper.createPerm.hasPermission){
+                            currentObjPermWrapper.createPerm.hasPermission = currentCreatePerm;
+                        }
+                    }
+                    
+                    if (currentReadPerm){
+                        
+                        if (!currentObjPermWrapper.readPerm.permissionSetLabels.contains(label)){
+                            currentObjPermWrapper.readPerm.permissionSetLabels.add(label);
+                        }
+                        
+                        if(!currentObjPermWrapper.readPerm.hasPermission){
+                            currentObjPermWrapper.readPerm.hasPermission = currentReadPerm;
+                        }
+                    }
+                    
+                    if (currentEditPerm){
+                        if (!currentObjPermWrapper.editPerm.permissionSetLabels.contains(label)){
+                            currentObjPermWrapper.editPerm.permissionSetLabels.add(label);
+                        }
+                        
+                        if (!currentObjPermWrapper.editPerm.hasPermission){
+                            currentObjPermWrapper.editPerm.hasPermission = currentReadPerm;
+                        }
+                    }
+                    
+                    if (currentDeletePerm){
+                        if (!currentObjPermWrapper.deletePerm.permissionSetLabels.contains(label)){
+                            currentObjPermWrapper.deletePerm.permissionSetLabels.add(label);
+                        }
+                        
+                        if (!currentObjPermWrapper.deletePerm.hasPermission){
+                            currentObjPermWrapper.deletePerm.hasPermission = currentDeletePerm;
+                        }
+                    }
+                    
+                    if (currentViewAllPerm){
+                        if (!currentObjPermWrapper.viewAllPerm.permissionSetLabels.contains(label)){
+                            currentObjPermWrapper.viewAllPerm.permissionSetLabels.add(label);
+                        }
+                        
+                        if (!currentObjPermWrapper.viewAllPerm.hasPermission){
+                            currentObjPermWrapper.viewAllPerm.hasPermission = currentViewAllPerm;
+                        }
+                    }
+                    
+                    if (currentModAllPerm){
+                        if (!currentObjPermWrapper.modAllPerm.permissionSetLabels.contains(label)){
+                            currentObjPermWrapper.modAllPerm.permissionSetLabels.add(label);
+                        }
+                        
+                        if (!currentObjPermWrapper.modAllPerm.hasPermission){
+                            currentObjPermWrapper.modAllPerm.hasPermission = currentViewAllPerm;                        
+                        }
                     }
                 }
                 
-                if (currentReadPerm){
-                    currentObjPermWrapper.readPerm.permissionSetLabels.add(label);
-                    if(!currentObjPermWrapper.readPerm.hasPermission){
-                        currentObjPermWrapper.readPerm.hasPermission = currentReadPerm;
-                    }
-                }
                 
-                if (currentEditPerm){
-                    currentObjPermWrapper.editPerm.permissionSetLabels.add(label);
-                    if (!currentObjPermWrapper.editPerm.hasPermission){
-                        currentObjPermWrapper.editPerm.hasPermission = currentReadPerm;
-                    }
-                }
-                
-                if (currentDeletePerm){
-                    currentObjPermWrapper.deletePerm.permissionSetLabels.add(label);
-                    if (!currentObjPermWrapper.deletePerm.hasPermission){
-                        currentObjPermWrapper.deletePerm.hasPermission = currentDeletePerm;
-                    }
-                }
-                
-                if (currentViewAllPerm){
-                    currentObjPermWrapper.viewAllPerm.permissionSetLabels.add(label);
-                    if (!currentObjPermWrapper.viewAllPerm.hasPermission){
-                        currentObjPermWrapper.viewAllPerm.hasPermission = currentViewAllPerm;
-                    }
-                }
-                
-                if (currentModAllPerm){
-                    currentObjPermWrapper.modAllPerm.permissionSetLabels.add(label);
-                    if (!currentObjPermWrapper.modAllPerm.hasPermission){
-                        currentObjPermWrapper.modAllPerm.hasPermission = currentViewAllPerm;                        
-                    }
-                }
             }
         }
-
+        
         return objectNameToUltPermissionMap.values();
     }
 }
