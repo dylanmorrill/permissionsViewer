@@ -13,6 +13,6 @@ I have found that determining if a user has a specific permission, and if so, wh
  
 ## Current app
  
-The current app allows you to select a user, and then aggregates all the user's object and system permissions below. Click on a box that is true (the user has that permission) shows a tooltip listing all the profiles and permission sets that are granting the user that permission.
+The current app allows you to select a user, and then aggregates all the user's object and system permissions below. Clicking on a box that is true (the user has that permission) shows a tooltip listing all the profiles and permission sets that are granting the user that permission.
  
 ![App view](https://i.imgur.com/up0g86Z.png)
