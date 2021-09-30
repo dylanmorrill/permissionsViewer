@@ -7,7 +7,7 @@ I am working on trying to create a lightning app that shows an aggregated view o
 - Field permissions (read, write)
 - System Permissions
 - Record Access
-  - How many records of x object can the user view, view and edit, or view edit and delete
+  - How many records of object x can the user view; view and edit; or view, edit and delete
  
 I have found that determining if a user has a specific permission, and if so, which permission sets or profiles are granting that permission, is difficult. To do this, I typically run queries on the relevant objects (ObjectPermissions, FieldPermissions, etc). This app will be my attempt to show a user all the permissions that one user has been granted. The page will be interactive, allowing users to determine which permissions sets or profiles are granting that permission.
  
